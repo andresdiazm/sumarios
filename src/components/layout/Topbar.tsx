@@ -1,10 +1,12 @@
 import React from 'react'
-import { Sun, Moon, Plus, ChevronRight } from 'lucide-react'
+import { Sun, Moon, Plus, ChevronRight, Sparkles } from 'lucide-react'
 import { useTheme } from '../../hooks/useTheme'
+import { useChatbotStore } from '../../store/useChatbotStore'
 import { Button } from '../ui/Button'
 
 export function Topbar() {
   const { isDark, toggle } = useTheme()
+  const { isOpen: chatOpen, toggle: toggleChat } = useChatbotStore()
 
   return (
     <header
@@ -43,6 +45,21 @@ export function Topbar() {
           <Plus size={14} />
           Nueva actuación
         </Button>
+
+        <button
+          onClick={toggleChat}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs transition-colors focus-ring"
+          style={{
+            backgroundColor: chatOpen ? 'var(--gold-bg)' : 'var(--bg-panel2)',
+            border: `1px solid ${chatOpen ? 'var(--gold)' : 'var(--border)'}`,
+            color: chatOpen ? 'var(--gold)' : 'var(--text-muted)',
+          }}
+          aria-label="Asistente jurídico IA"
+          title="Asistente jurídico IA"
+        >
+          <Sparkles size={13} />
+          <span>Asistente IA</span>
+        </button>
 
         <button
           onClick={toggle}

@@ -5,6 +5,8 @@ import { useDocumentUpload } from '../../hooks/useDocumentUpload'
 import { useDocumentStore } from '../../store/useDocumentStore'
 import { DocumentTagger } from './DocumentTagger'
 import { generateId } from '../../lib/utils'
+import { stampFolioPdf } from '../../lib/pdfUtils'
+import { getNextFolioNumber } from '../../lib/foliacion'
 import type { LexDocument } from '../../types'
 
 export function DocumentUploader() {
@@ -14,7 +16,7 @@ export function DocumentUploader() {
   const [taggerOpen, setTaggerOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const { prepareFile, isLoading, progress, error, validate } = useDocumentUpload()
-  const addDocument = useDocumentStore((s) => s.addDocument)
+  const { addDocument, documents } = useDocumentStore()
 
   async function handleFile(file: File) {
     const validationError = validate(file)
@@ -49,26 +51,41 @@ export function DocumentUploader() {
     e.target.value = ''
   }
 
-  function onTaggerSave(data: Partial<LexDocument>) {
+  async function onTaggerSave(data: Partial<LexDocument>) {
     if (!pendingFile) return
+
+    const nextFolioNum = getNextFolioNumber(documents.map((d) => d.folio))
+
+    // Stamp the folio on each page of the PDF
+    let finalUrl = pendingUrl
+    let finalFile = pendingFile
+    try {
+      const stamped = await stampFolioPdf(pendingFile, nextFolioNum)
+      if (pendingUrl) URL.revokeObjectURL(pendingUrl)
+      finalUrl = stamped.url
+      finalFile = new File([stamped.blob], pendingFile.name, { type: 'application/pdf' })
+    } catch {
+      // If stamping fails, use the original
+    }
+
     const doc: LexDocument = {
       id:               generateId(),
       name:             data.name ?? pendingFile.name,
       originalFileName: pendingFile.name,
       type:             data.type ?? 'otro',
       status:           data.status ?? 'sin_firma',
-      folio:            data.folio ?? '',
+      folio:            '',   // auto-assigned by store
       etapa:            data.etapa ?? 'instruccion',
       notes:            data.notes,
       uploadedAt:       new Date(),
-      fileSize:         pendingFile.size,
-      url:              pendingUrl,
-      file:             pendingFile,
+      fileSize:         finalFile.size,
+      url:              finalUrl,
+      file:             finalFile,
       tags:             [],
       selected:         false,
     }
     addDocument(doc)
-    toast.success(`"${doc.name}" agregado al expediente`)
+    toast.success(`"${doc.name}" agregado — folio ${nextFolioNum} estampado en el PDF`)
     setPendingFile(null)
     setPendingUrl('')
   }

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { LexDocument } from '../types'
+import { getNextFolioNumber, formatFolioPadded } from '../lib/foliacion'
 
 const MOCK_DOCUMENTS: LexDocument[] = [
   {
@@ -102,7 +103,12 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
   searchQuery: '',
   typeFilter: null,
 
-  addDocument: (doc) => set((s) => ({ documents: [...s.documents, doc] })),
+  addDocument: (doc) =>
+    set((s) => {
+      const nextFolioNum = getNextFolioNumber(s.documents.map((d) => d.folio))
+      const autoFolio = doc.folio || formatFolioPadded(nextFolioNum)
+      return { documents: [...s.documents, { ...doc, folio: autoFolio }] }
+    }),
 
   updateDocument: (id, partial) =>
     set((s) => ({

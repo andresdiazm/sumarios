@@ -10,7 +10,6 @@ import type { LexDocument, DocumentType, DocumentStatus } from '../../types'
 const schema = z.object({
   name:   z.string().min(1, 'El nombre es requerido'),
   type:   z.string().min(1, 'Seleccione un tipo'),
-  folio:  z.string().min(1, 'El folio es requerido'),
   status: z.enum(['firmado', 'sin_firma', 'pendiente']),
   etapa:  z.string().min(1, 'Seleccione una etapa'),
   notes:  z.string().optional(),
@@ -56,7 +55,6 @@ export function DocumentTagger({ open, onClose, onSave, initial, mode = 'add' }:
     defaultValues: {
       name:   initial?.name ?? initial?.originalFileName ?? '',
       type:   initial?.type ?? 'declaracion',
-      folio:  initial?.folio ?? '',
       status: initial?.status ?? 'sin_firma',
       etapa:  initial?.etapa ?? 'instruccion',
       notes:  initial?.notes ?? '',
@@ -68,7 +66,6 @@ export function DocumentTagger({ open, onClose, onSave, initial, mode = 'add' }:
       reset({
         name:   initial?.name ?? initial?.originalFileName ?? '',
         type:   initial?.type ?? 'declaracion',
-        folio:  initial?.folio ?? '',
         status: initial?.status ?? 'sin_firma',
         etapa:  initial?.etapa ?? 'instruccion',
         notes:  initial?.notes ?? '',
@@ -80,7 +77,6 @@ export function DocumentTagger({ open, onClose, onSave, initial, mode = 'add' }:
     onSave({
       name:   data.name,
       type:   data.type as DocumentType,
-      folio:  data.folio,
       status: data.status as DocumentStatus,
       etapa:  data.etapa,
       notes:  data.notes,
@@ -112,36 +108,30 @@ export function DocumentTagger({ open, onClose, onSave, initial, mode = 'add' }:
             )}
           </div>
 
-          {/* Tipo + Folio */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label style={labelStyle} htmlFor="doc-type">
-                Tipo de documento <span style={{ color: 'var(--red)' }}>*</span>
-              </label>
-              <select id="doc-type" {...register('type')} style={fieldStyle}>
-                {TIPOS_DOCUMENTO.map((t) => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
-                ))}
-              </select>
-              {errors.type && (
-                <p className="text-xs mt-1" style={{ color: 'var(--red)' }}>{errors.type.message}</p>
-              )}
+          {/* Folio info banner (add mode) */}
+          {mode === 'add' && (
+            <div
+              className="flex items-center gap-2 px-3 py-2 text-xs"
+              style={{ backgroundColor: 'var(--gold-bg)', border: '1px solid rgba(212,175,80,0.25)', color: 'var(--gold)' }}
+            >
+              <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
+              Folio asignado automáticamente según orden de carga y estampado en cada hoja del PDF.
             </div>
-            <div>
-              <label style={labelStyle} htmlFor="doc-folio">
-                Número de folio <span style={{ color: 'var(--red)' }}>*</span>
-              </label>
-              <input
-                id="doc-folio"
-                {...register('folio')}
-                style={fieldStyle}
-                placeholder="Ej: 007"
-                className="font-mono"
-              />
-              {errors.folio && (
-                <p className="text-xs mt-1" style={{ color: 'var(--red)' }}>{errors.folio.message}</p>
-              )}
-            </div>
+          )}
+
+          {/* Tipo */}
+          <div>
+            <label style={labelStyle} htmlFor="doc-type">
+              Tipo de documento <span style={{ color: 'var(--red)' }}>*</span>
+            </label>
+            <select id="doc-type" {...register('type')} style={fieldStyle}>
+              {TIPOS_DOCUMENTO.map((t) => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+            </select>
+            {errors.type && (
+              <p className="text-xs mt-1" style={{ color: 'var(--red)' }}>{errors.type.message}</p>
+            )}
           </div>
 
           {/* Estado */}
